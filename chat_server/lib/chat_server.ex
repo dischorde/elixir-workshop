@@ -18,20 +18,24 @@ defmodule ChatServer do
     defstruct content: "", username: "anon"
   end
 
-  def start_link do
-    GenServer.start_link(__MODULE__, :ok, name: :chat_room)
+  def start_link(room_name) do
+    GenServer.start_link(__MODULE__, :ok, name: via_tuple(room_name))
   end
 
-  def get do
-    GenServer.call(:chat_room, {:get})
+  def get(room_name) do
+    GenServer.call(via_tuple(room_name), {:get})
   end
 
-  def create(content) do
-    GenServer.cast(:chat_room, {:create, content})
+  def create(room_name, content) do
+    GenServer.cast(via_tuple(room_name), {:create, content})
   end
 
   def init(:ok) do
     {:ok, []}
+  end
+
+  def via_tuple(room_name) do
+    {:via, Registry, {:chat_room, room_name}}
   end
 
   def handle_call({:create, msg}, from, state) do
@@ -58,25 +62,32 @@ defmodule ChatServer do
     end
   end
 
-  def loop do
-    loop([])
+  def handle_call(request, from, state) do
+    super(request, from, state)
   end
 
-  defp loop(state) do
-    receive do
-      {:get, from} ->
-        send(from, state)
-        loop(state)
-      {:create, msg} ->
-        if is_map(msg) do
-          formatted = struct(Message, msg)
-          loop(state ++ [formatted])
-        else
-          formatted = %Message{content: msg}
-          loop(state ++ [formatted])
-        end
-    end
+  def handle_cast(request, state) do
+    super(request, state)
   end
 
+  # def loop do
+  #   loop([])
+  # end
+  #
+  # defp loop(state) do
+  #   receive do
+  #     {:get, from} ->
+  #       send(from, state)
+  #       loop(state)
+  #     {:create, msg} ->
+  #       if is_map(msg) do
+  #         formatted = struct(Message, msg)
+  #         loop(state ++ [formatted])
+  #       else
+  #         formatted = %Message{content: msg}
+  #         loop(state ++ [formatted])
+  #       end
+  #   end
+  # end
 
 end

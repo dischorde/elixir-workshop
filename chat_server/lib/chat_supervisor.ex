@@ -10,10 +10,16 @@ defmodule ChatServer.Supervisor do
     # the child processes of this supervisor are one ChatServer
       # the second argument is a list of arguments that should get passed to
       # that module's start_link function
+    Registry.start_link(:unique, :chat_room)
+
     children = [
       worker(ChatServer, [])
     ]
 
-    supervise(children, strategy: :one_for_one)
+    supervise(children, strategy: :simple_one_for_one)
+  end
+
+  def start_room(name) do
+    Supervisor.start_child(:chat_supervisor, [name])
   end
 end
