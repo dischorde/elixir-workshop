@@ -12,6 +12,10 @@ defmodule ChatServer do
       :world
 
   """
+  defmodule Message do
+    defstruct content: "", username: "anon"
+  end
+  
   def hello do
     :world
   end
@@ -26,8 +30,15 @@ defmodule ChatServer do
         send(from, state)
         loop(state)
       {:create, msg} ->
-        new_state = state ++ [msg]
-        loop(new_state)
+        if is_map(msg) do
+          formatted = struct(Message, msg)
+          loop(state ++ [formatted])
+        else
+          formatted = %Message{content: msg}
+          loop(state ++ [formatted])
+        end
     end
   end
+
+
 end
